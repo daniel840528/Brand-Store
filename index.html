@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diito Global Store Design & Modular Fabrication Brief</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f4f4f0; color: #16160b; }
+        
+        /* Diito Color Palette Classes */
+        .bg-diito-light-grey { background-color: #dbd9c6; }
+        .bg-diito-mid-grey { background-color: #999887; }
+        .bg-diito-dark-grey { background-color: #595848; }
+        .bg-diito-black { background-color: #16160b; }
+        .bg-diito-yellow { background-color: #f6ee52; }
+        .text-diito-yellow { color: #f6ee52; }
+        .text-diito-black { color: #16160b; }
+        .border-diito-yellow { border-color: #f6ee52; }
+
+        /* Chart Container Styling - MANDATORY */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        /* Interactive Elements */
+        .nav-link.active {
+            border-bottom: 3px solid #f6ee52;
+            color: #16160b;
+            font-weight: 600;
+        }
+        .module-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .zone-block {
+            transition: all 0.5s ease-in-out;
+        }
+
+        /* Schematic Grid */
+        .schematic-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            grid-template-rows: repeat(6, 1fr);
+            gap: 4px;
+            aspect-ratio: 1/1;
+        }
+    </style>
+    <!-- Chosen Palette: Diito Brand Colors (#dbd9c6, #999887, #595848, #f6ee52, #16160b) -->
+    <!-- Application Structure Plan:
+        1. Overview: Quick summary of the project goals (Modularity, Supply Chain).
+        2. Store Configurator (The Core): An interactive section where users select a Store Type (A/B/C/D). The UI dynamically updates a "Schematic Layout" (visualizing zones scaling), a "Modular BOM" (Bill of Materials), and specific design requirements. This directly addresses the "Scalable Zoning" requirement.
+        3. Modular Kit Catalog: Detailed cards for the specific requested modules (Island, Wall, POS, Totem) + Brainstorming ideas.
+        4. Material System: Interactive Pie Chart showing the 60/30/10 SI rule.
+        5. Execution Scope: Tabbed view for Deliverables and Supply Chain division.
+        Rationale: This structure puts the "Configurator" front and center, allowing the user (Design Agency) to immediately see how the modular system adapts to different store sizes, which is the core challenge of the brief.
+    -->
+    <!-- Visualization & Content Choices:
+        - Schematic Layout: CSS Grid based visualizer. Goal: Demonstrate how zones expand/contract without using complex 3D renders.
+        - Material Chart: Doughnut Chart. Goal: Visualize the strict SI color ratio.
+        - BOM Table: Dynamic HTML Table. Goal: List specific component quantities per store type.
+        - Interaction: Tab switching, buttons for store types, hover effects for module details.
+        - NO SVG/Mermaid confirmed.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-diito-black text-white sticky top-0 z-50 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-diito-yellow rounded-sm flex items-center justify-center text-diito-black font-bold">D</div>
+                    <h1 class="font-bold text-lg tracking-wide">DIITO <span class="font-normal text-gray-400 text-sm">| Global Store Brief</span></h1>
+                </div>
+                <nav class="hidden md:flex space-x-8">
+                    <button onclick="switchSection('overview')" id="nav-overview" class="nav-link active py-2 text-sm text-gray-300 hover:text-white transition">Overview</button>
+                    <button onclick="switchSection('configurator')" id="nav-configurator" class="nav-link py-2 text-sm text-gray-300 hover:text-white transition">Store Configurator</button>
+                    <button onclick="switchSection('modules')" id="nav-modules" class="nav-link py-2 text-sm text-gray-300 hover:text-white transition">Modular Kit</button>
+                    <button onclick="switchSection('materials')" id="nav-materials" class="nav-link py-2 text-sm text-gray-300 hover:text-white transition">Materials</button>
+                    <button onclick="switchSection('execution')" id="nav-execution" class="nav-link py-2 text-sm text-gray-300 hover:text-white transition">Execution</button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+        
+        <!-- SECTION: OVERVIEW -->
+        <section id="section-overview" class="animate-fade">
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-8">
+                <div class="bg-diito-dark-grey p-8 text-white">
+                    <h2 class="text-3xl font-bold mb-4">HNB Global Store Design & Modular Fabrication</h2>
+                    <p class="text-gray-200 max-w-2xl text-lg">
+                        打造一套高度模塊化、可工業化生產、易於海外組裝的門店系統。
+                        利用中國供應鏈優勢，實現全球標準化落地。
+                    </p>
+                </div>
+                <div class="grid md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-gray-100">
+                    <div class="p-6 text-center">
+                        <div class="text-4xl mb-2">🧩</div>
+                        <h3 class="font-bold text-diito-black mb-2">Modularity</h3>
+                        <p class="text-sm text-gray-600">像樂高一樣的組件系統，適應從 4m² 到 64m² 的所有場景。</p>
+                    </div>
+                    <div class="p-6 text-center">
+                        <div class="text-4xl mb-2">🏭</div>
+                        <h3 class="font-bold text-diito-black mb-2">Centralized Supply</h3>
+                        <p class="text-sm text-gray-600">核心高工藝道具（金屬、發光字）中國集中生產。</p>
+                    </div>
+                    <div class="p-6 text-center">
+                        <div class="text-4xl mb-2">🌍</div>
+                        <h3 class="font-bold text-diito-black mb-2">Global Standard</h3>
+                        <p class="text-sm text-gray-600">標準化輸出設計圖與組裝指引，降低海外施工難度。</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-12">
+                <button onclick="switchSection('configurator')" class="bg-diito-yellow text-diito-black px-8 py-4 rounded-lg font-bold shadow hover:bg-yellow-400 transition transform hover:scale-105">
+                    開始門店配置模擬 (Start Configuration)
+                </button>
+            </div>
+        </section>
+
+        <!-- SECTION: STORE CONFIGURATOR -->
+        <section id="section-configurator" class="hidden animate-fade">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-diito-black mb-4">門店分級與配置模擬 (Store Tiering & Layout)</h2>
+                <p class="text-gray-600 mb-6">選擇店型，查看空間佈局邏輯與所需的模塊清單。分區邏輯基於「彈性伸縮」而非重新設計。</p>
+                
+                <!-- Store Type Selectors -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                    <button onclick="selectStore('A')" id="btn-store-A" class="store-btn p-4 border-2 rounded-lg text-left hover:border-diito-yellow transition bg-white group">
+                        <div class="text-xs text-gray-500 font-bold uppercase">Type A</div>
+                        <div class="text-xl font-bold text-diito-black group-hover:text-diito-dark-grey">Boutique</div>
+                        <div class="text-sm text-gray-400 mt-1">24 - 64 m²</div>
+                    </button>
+                    <button onclick="selectStore('B')" id="btn-store-B" class="store-btn p-4 border-2 rounded-lg text-left hover:border-diito-yellow transition bg-white group">
+                        <div class="text-xs text-gray-500 font-bold uppercase">Type B</div>
+                        <div class="text-xl font-bold text-diito-black group-hover:text-diito-dark-grey">Core Boutique</div>
+                        <div class="text-sm text-gray-400 mt-1">12 - 24 m²</div>
+                    </button>
+                    <button onclick="selectStore('C')" id="btn-store-C" class="store-btn p-4 border-2 rounded-lg text-left hover:border-diito-yellow transition bg-white group">
+                        <div class="text-xs text-gray-500 font-bold uppercase">Type C</div>
+                        <div class="text-xl font-bold text-diito-black group-hover:text-diito-dark-grey">Premium Kiosk</div>
+                        <div class="text-sm text-gray-400 mt-1">12 - 32 m²</div>
+                    </button>
+                    <button onclick="selectStore('D')" id="btn-store-D" class="store-btn p-4 border-2 rounded-lg text-left hover:border-diito-yellow transition bg-white group">
+                        <div class="text-xs text-gray-500 font-bold uppercase">Type D</div>
+                        <div class="text-xl font-bold text-diito-black group-hover:text-diito-dark-grey">Core Kiosk</div>
+                        <div class="text-sm text-gray-400 mt-1">4 - 10 m²</div>
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-8">
+                <!-- Visualizer Column -->
+                <div class="bg-white p-6 rounded-xl shadow-sm">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-lg">彈性分區示意 (Scalable Zoning)</h3>
+                        <span id="store-area-label" class="bg-gray-100 text-xs px-2 py-1 rounded">Select a type</span>
+                    </div>
+                    
+                    <!-- Schematic Layout Container -->
+                    <div class="relative bg-gray-50 border border-gray-200 rounded-lg p-4 h-96 flex items-center justify-center overflow-hidden">
+                        <div id="layout-visualizer" class="schematic-grid w-full max-w-[300px] transition-all duration-500">
+                            <!-- JS will inject grid cells here -->
+                        </div>
+                        
+                        <!-- Legend overlay -->
+                        <div class="absolute bottom-4 left-4 bg-white/90 p-2 rounded text-xs shadow-sm border border-gray-100">
+                            <div class="flex items-center gap-2 mb-1"><div class="w-3 h-3 bg-diito-yellow"></div> Zone 1: Experience</div>
+                            <div class="flex items-center gap-2 mb-1"><div class="w-3 h-3 bg-diito-mid-grey"></div> Zone 2: Display</div>
+                            <div class="flex items-center gap-2"><div class="w-3 h-3 bg-diito-black"></div> Zone 3: Service</div>
+                        </div>
+                    </div>
+                    
+                    <div id="layout-description" class="mt-4 text-sm text-gray-600 bg-gray-50 p-3 rounded border-l-4 border-diito-mid-grey">
+                        <!-- Dynamic description -->
+                    </div>
+                </div>
+
+                <!-- Data Column -->
+                <div class="space-y-6">
+                    <!-- Component List -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm">
+                        <h3 class="font-bold text-lg mb-4">模塊清單 (Bill of Materials)</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left">
+                                <thead class="bg-gray-50 text-gray-500 border-b">
+                                    <tr>
+                                        <th class="px-3 py-2">Module</th>
+                                        <th class="px-3 py-2">Type</th>
+                                        <th class="px-3 py-2 text-right">Qty</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bom-body" class="divide-y divide-gray-100">
+                                    <!-- Dynamic Rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Functional Ratio Chart -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm">
+                        <h3 class="font-bold text-lg mb-2">功能分佈 (Functional Distribution)</h3>
+                        <div class="chart-container h-48">
+                            <canvas id="storeMixChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: MODULAR KIT -->
+        <section id="section-modules" class="hidden animate-fade">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-diito-black mb-4">模塊化道具開發需求 (Modular Fixture Requirements)</h2>
+                <p class="text-gray-600">所有道具需基於統一模數（如 600/900mm），確保互換性與擴展性。</p>
+            </div>
+
+            <!-- Tabs for Modules vs Brainstorming -->
+            <div class="flex gap-4 mb-6 border-b border-gray-200">
+                <button onclick="toggleModuleView('core')" class="pb-2 border-b-2 border-diito-yellow font-bold text-diito-black">核心模塊 (Core)</button>
+                <button onclick="toggleModuleView('innovation')" class="pb-2 border-b-2 border-transparent text-gray-500 hover:text-diito-black">創新概念 (Innovation Lab)</button>
+            </div>
+
+            <!-- Core Modules Grid -->
+            <div id="view-core" class="grid md:grid-cols-2 gap-6">
+                <!-- Island -->
+                <div class="module-card bg-white p-6 rounded-xl border border-gray-100 relative overflow-hidden group">
+                    <div class="absolute top-0 left-0 w-1 h-full bg-diito-yellow"></div>
+                    <h3 class="text-xl font-bold mb-2">01. 可拓展中島 (Expandable Island)</h3>
+                    <div class="text-sm text-gray-500 mb-4">Zone 1: Experience</div>
+                    <ul class="text-sm text-gray-700 space-y-2 mb-4">
+                        <li>• <strong>結構：</strong>主櫃體 (1.2m) + 延伸櫃體 (1.2m)</li>
+                        <li>• <strong>功能：</strong>內藏充電/防盜線，替換式海報槽</li>
+                        <li>• <strong>材質：</strong>拉絲不銹鋼包邊 + 啞光檯面</li>
+                    </ul>
+                    <div class="bg-gray-50 p-2 rounded text-xs text-gray-500">
+                        適配: Type A (2.4m), Type D (1.2m)
+                    </div>
+                </div>
+
+                <!-- Wall System -->
+                <div class="module-card bg-white p-6 rounded-xl border border-gray-100 relative overflow-hidden group">
+                    <div class="absolute top-0 left-0 w-1 h-full bg-diito-mid-grey"></div>
+                    <h3 class="text-xl font-bold mb-2">02. 萬用牆面系統 (Universal Wall)</h3>
+                    <div class="text-sm text-gray-500 mb-4">Zone 2: Display</div>
+                    <ul class="text-sm text-gray-700 space-y-2 mb-4">
+                        <li>• <strong>結構：</strong>AA柱或 Slotwall 插槽背板</li>
+                        <li>• <strong>配件：</strong>通用掛鉤、層板、磁吸燈箱盒</li>
+                        <li>• <strong>調節：</strong>層板高度自由調節，適應不同產品尺寸</li>
+                    </ul>
+                    <div class="bg-gray-50 p-2 rounded text-xs text-gray-500">
+                        適配: Type A, Type B (主要展示面)
+                    </div>
+                </div>
+
+                <!-- POS -->
+                <div class="module-card bg-white p-6 rounded-xl border border-gray-100 relative overflow-hidden group">
+                    <div class="absolute top-0 left-0 w-1 h-full bg-diito-black"></div>
+                    <h3 class="text-xl font-bold mb-2">03. 樂高式收銀台 (Lego POS)</h3>
+                    <div class="text-sm text-gray-500 mb-4">Zone 3: Service</div>
+                    <ul class="text-sm text-gray-700 space-y-2 mb-4">
+                        <li>• <strong>模組 A：</strong>收銀主機位 (Core)</li>
+                        <li>• <strong>模組 B：</strong>轉角連接件 (Corner)</li>
+                        <li>• <strong>模組 C：</strong>前置陳列櫃 (Display front)</li>
+                    </ul>
+                    <div class="bg-gray-50 p-2 rounded text-xs text-gray-500">
+                        組合: Boutique (A+B+C), Kiosk (Only A)
+                    </div>
+                </div>
+
+                <!-- Totem -->
+                <div class="module-card bg-white p-6 rounded-xl border border-gray-100 relative overflow-hidden group">
+                    <div class="absolute top-0 left-0 w-1 h-full bg-diito-mid-grey"></div>
+                    <h3 class="text-xl font-bold mb-2">04. 快閃式立柱 (Pop-up Totem)</h3>
+                    <div class="text-sm text-gray-500 mb-4">Zone 2: Display (Kiosk Special)</div>
+                    <ul class="text-sm text-gray-700 space-y-2 mb-4">
+                        <li>• <strong>需求：</strong>針對無牆面的 Kiosk 設計</li>
+                        <li>• <strong>功能：</strong>自立式高櫃，雙面展示</li>
+                        <li>• <strong>作用：</strong>定義空間邊界 (Invisible Wall)</li>
+                    </ul>
+                    <div class="bg-gray-50 p-2 rounded text-xs text-gray-500">
+                        適配: Type C, Type D (替代牆面)
+                    </div>
+                </div>
+            </div>
+
+            <!-- Innovation Lab Grid (Brainstorming) -->
+            <div id="view-innovation" class="hidden grid md:grid-cols-3 gap-6">
+                <div class="bg-yellow-50 p-6 rounded-xl border border-yellow-200">
+                    <div class="text-2xl mb-2">💡</div>
+                    <h3 class="font-bold mb-2">發光背板模塊 (Light Tile)</h3>
+                    <p class="text-sm text-gray-700">統一 600x600mm 發光方塊。可做海報、洞洞板或純裝飾。Boutique 牆面用 20 個，Kiosk 用 4 個。</p>
+                </div>
+                <div class="bg-yellow-50 p-6 rounded-xl border border-yellow-200">
+                    <div class="text-2xl mb-2">🧲</div>
+                    <h3 class="font-bold mb-2">磁吸式托盤 (Magnetic Tray)</h3>
+                    <p class="text-sm text-gray-700">桌面陳列底座磁吸化。新品上市時，店員無需工具即可瞬間替換佈局。</p>
+                </div>
+                <div class="bg-yellow-50 p-6 rounded-xl border border-yellow-200">
+                    <div class="text-2xl mb-2">🔌</div>
+                    <h3 class="font-bold mb-2">電力軌道層板 (Powered Shelf)</h3>
+                    <p class="text-sm text-gray-700">牆面立柱通電，層板扣上即亮。無需插拔線，大幅降低海外維護難度。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: MATERIALS -->
+        <section id="section-materials" class="hidden animate-fade">
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div>
+                    <h2 class="text-2xl font-bold text-diito-black mb-6">材質配比與 SI 對應</h2>
+                    <p class="text-gray-600 mb-6">嚴格遵循 SI 手冊的 60-30-10 法則，確保全球門店視覺統一。</p>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-center p-3 bg-white rounded shadow-sm border-l-4 border-[#dbd9c6]">
+                            <div class="w-16 font-bold text-2xl text-gray-400">60%</div>
+                            <div>
+                                <div class="font-bold">Base: Light Grey</div>
+                                <div class="text-xs text-gray-500">#dbd9c6 (Matte Paint) | Clean & Modern</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center p-3 bg-white rounded shadow-sm border-l-4 border-[#999887]">
+                            <div class="w-16 font-bold text-2xl text-gray-400">30%</div>
+                            <div>
+                                <div class="font-bold">Texture: Metal & Glass</div>
+                                <div class="text-xs text-gray-500">Brushed Stainless Steel & Reeded Glass (Backlit)</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center p-3 bg-white rounded shadow-sm border-l-4 border-[#f6ee52]">
+                            <div class="w-16 font-bold text-2xl text-gray-400">10%</div>
+                            <div>
+                                <div class="font-bold">Accent: Diito Yellow</div>
+                                <div class="text-xs text-gray-500">#f6ee52 | Logo, Price tags, Thin lines (No large areas)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm">
+                    <div class="chart-container">
+                        <canvas id="materialChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: EXECUTION -->
+        <section id="section-execution" class="hidden animate-fade">
+            <h2 class="text-2xl font-bold text-diito-black mb-6">設計交付與執行 (Deliverables & Scope)</h2>
+            
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Deliverables Checklist -->
+                <div class="bg-white p-6 rounded-xl shadow-sm">
+                    <h3 class="font-bold text-lg mb-4 border-b pb-2">📂 設計交付物 (Deliverables)</h3>
+                    <ul class="space-y-3">
+                        <li class="flex items-start">
+                            <span class="text-green-500 mr-2">✓</span>
+                            <div>
+                                <strong>平面佈局圖 (Floor Plans)</strong>
+                                <p class="text-xs text-gray-500">4種店型，標註動線與分區。</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-green-500 mr-2">✓</span>
+                            <div>
+                                <strong>3D 效果圖 (Renderings)</strong>
+                                <p class="text-xs text-gray-500">每店型 4 張 (門頭, 全景, 體驗區, 收銀)。需模擬 3000K 光影。</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-green-500 mr-2">✓</span>
+                            <div>
+                                <strong>模塊拆解圖 (Exploded Views)</strong>
+                                <p class="text-xs text-gray-500">展示 Flat-pack 扁平包裝結構。</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-green-500 mr-2">✓</span>
+                            <div>
+                                <strong>IKEA式安裝指引 (Assembly Guide)</strong>
+                                <p class="text-xs text-gray-500">圖示化步驟，減少文字依賴。</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Supply Chain Scope -->
+                <div class="bg-white p-6 rounded-xl shadow-sm">
+                    <h3 class="font-bold text-lg mb-4 border-b pb-2">🏗️ 供應鏈分工 (Supply Chain Matrix)</h3>
+                    
+                    <div class="space-y-4">
+                        <div class="bg-gray-50 p-3 rounded border border-gray-200">
+                            <div class="font-bold text-diito-black flex justify-between">
+                                <span>🇨🇳 China Supply (Export)</span>
+                                <span class="text-xs bg-black text-white px-2 py-0.5 rounded">High Precision</span>
+                            </div>
+                            <ul class="text-sm mt-2 text-gray-600 list-disc list-inside">
+                                <li>所有模塊化道具 (D01, D02, S01)</li>
+                                <li>品牌標識 (燈箱, 發光字)</li>
+                                <li>預裝 LED 系統 (Plug & Play)</li>
+                                <li>長虹玻璃組件</li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-gray-50 p-3 rounded border border-gray-200">
+                            <div class="font-bold text-diito-black flex justify-between">
+                                <span>🌍 Local Agency (On-site)</span>
+                                <span class="text-xs bg-gray-400 text-white px-2 py-0.5 rounded">Foundation</span>
+                            </div>
+                            <ul class="text-sm mt-2 text-gray-600 list-disc list-inside">
+                                <li>天地牆基礎裝修 (Paint, Floor)</li>
+                                <li>基礎電力接入 (Socket, Wiring)</li>
+                                <li>收貨、拆箱、組裝定位</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-diito-mid-grey text-white py-6 mt-12">
+        <div class="max-w-7xl mx-auto px-4 text-center text-sm">
+            <p>© 2024 Diito Brand Team. Confidential.</p>
+            <p class="opacity-70 mt-1">Design & Manufacturing Brief v1.0</p>
+        </div>
+    </footer>
+
+    <script>
+        // --- DATA ---
+        const storeData = {
+            'A': {
+                name: 'Boutique',
+                area: '24 - 64 m²',
+                desc: '獨立店舖。完整品牌體驗，包含社交休息區與深度試用。',
+                gridSize: 6, // 6x6 grid
+                zones: [
+                    { type: 'zone1', count: 9 }, // Experience (Yellow)
+                    { type: 'zone2', count: 12 }, // Display (Grey)
+                    { type: 'zone3', count: 6 },  // Service (Black)
+                    { type: 'zone4', count: 9 }   // Leisure/Empty (White)
+                ],
+                bom: [
+                    { name: 'Expandable Island (2.4m)', type: 'Display', qty: 2 },
+                    { name: 'Universal Wall System', type: 'Wall', qty: '3 Walls' },
+                    { name: 'Lego POS (A+B+C)', type: 'Service', qty: 1 },
+                    { name: 'Main Fascia (Long)', type: 'Brand', qty: 1 }
+                ],
+                chartData: [30, 40, 20, 10] // Exp, Disp, Serv, Leisure
+            },
+            'B': {
+                name: 'Core Boutique',
+                area: '12 - 24 m²',
+                desc: '小型店舖。高效銷售，標準陳列，快速試用。',
+                gridSize: 4, // 4x4 grid
+                zones: [
+                    { type: 'zone1', count: 4 },
+                    { type: 'zone2', count: 8 },
+                    { type: 'zone3', count: 4 }
+                ],
+                bom: [
+                    { name: 'Expandable Island (1.2m)', type: 'Display', qty: 1 },
+                    { name: 'Universal Wall System', type: 'Wall', qty: '2 Walls' },
+                    { name: 'Lego POS (A+B)', type: 'Service', qty: 1 },
+                    { name: 'Blade Sign', type: 'Brand', qty: 1 }
+                ],
+                chartData: [25, 50, 25, 0]
+            },
+            'C': {
+                name: 'Premium Kiosk',
+                area: '12 - 32 m²',
+                desc: '商場中島。視覺衝擊力強，四面動線開放。',
+                gridSize: 5,
+                zones: [
+                    { type: 'zone1', count: 6 },
+                    { type: 'zone2', count: 10 }, // Totems represented as display
+                    { type: 'zone3', count: 4 }
+                ],
+                bom: [
+                    { name: 'Hero Island (1.2m)', type: 'Display', qty: 1 },
+                    { name: 'Pop-up Totem (Double)', type: 'Display', qty: 4 },
+                    { name: 'Mini POS Counter', type: 'Service', qty: 1 },
+                    { name: 'Feature Cube', type: 'Brand', qty: 2 }
+                ],
+                chartData: [40, 40, 20, 0]
+            },
+            'D': {
+                name: 'Core Kiosk',
+                area: '4 - 10 m²',
+                desc: '微型車仔檔。極致坪效，單人運營，隨拿隨走。',
+                gridSize: 3,
+                zones: [
+                    { type: 'zone3', count: 9 } // Integrated mostly service/display mixed
+                ],
+                bom: [
+                    { name: 'Integrated Island/POS', type: 'Hybrid', qty: 1 },
+                    { name: 'Pop-up Totem (Single)', type: 'Display', qty: 2 },
+                    { name: 'Feature Cube', type: 'Brand', qty: 1 }
+                ],
+                chartData: [20, 30, 50, 0]
+            }
+        };
+
+        // --- CHART INSTANCES ---
+        let storeMixChart = null;
+        let materialChart = null;
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            selectStore('A'); // Default selection
+            initMaterialChart();
+        });
+
+        // --- NAVIGATION LOGIC ---
+        function switchSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('main > section').forEach(el => el.classList.add('hidden'));
+            // Show target
+            document.getElementById(`section-${sectionId}`).classList.remove('hidden');
+            
+            // Update Nav
+            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+            const navBtn = document.getElementById(`nav-${sectionId}`);
+            if(navBtn) navBtn.classList.add('active');
+
+            window.scrollTo(0, 0);
+        }
+
+        function toggleModuleView(view) {
+            if(view === 'core') {
+                document.getElementById('view-core').classList.remove('hidden');
+                document.getElementById('view-innovation').classList.add('hidden');
+                // Update tabs visual roughly
+                event.target.classList.add('border-diito-yellow', 'text-diito-black');
+                event.target.nextElementSibling?.classList.remove('border-diito-yellow', 'text-diito-black');
+            } else {
+                document.getElementById('view-core').classList.add('hidden');
+                document.getElementById('view-innovation').classList.remove('hidden');
+                // Update tabs visual
+                event.target.classList.add('border-diito-yellow', 'text-diito-black');
+                event.target.previousElementSibling?.classList.remove('border-diito-yellow', 'text-diito-black');
+            }
+        }
+
+        // --- CONFIGURATOR LOGIC ---
+        function selectStore(type) {
+            const data = storeData[type];
+            
+            // 1. Update Buttons State
+            document.querySelectorAll('.store-btn').forEach(btn => {
+                btn.classList.remove('border-diito-yellow', 'bg-yellow-50');
+                btn.classList.add('border-gray-200');
+            });
+            const activeBtn = document.getElementById(`btn-store-${type}`);
+            activeBtn.classList.add('border-diito-yellow', 'bg-yellow-50');
+            activeBtn.classList.remove('border-gray-200');
+
+            // 2. Update Descriptions
+            document.getElementById('store-area-label').innerText = `${data.name} (${data.area})`;
+            document.getElementById('layout-description').innerText = data.desc;
+
+            // 3. Render Schematic Layout
+            renderSchematic(data);
+
+            // 4. Render BOM
+            renderBOM(data.bom);
+
+            // 5. Update Functional Chart
+            renderStoreChart(data.chartData);
+        }
+
+        function renderSchematic(data) {
+            const container = document.getElementById('layout-visualizer');
+            container.innerHTML = ''; // Clear
+            
+            // Set Grid Columns based on size complexity
+            container.style.gridTemplateColumns = `repeat(${data.gridSize}, 1fr)`;
+            container.style.gridTemplateRows = `repeat(${data.gridSize}, 1fr)`;
+
+            // Flatten zones into a single array of cells
+            let cells = [];
+            data.zones.forEach(zone => {
+                for(let i=0; i<zone.count; i++) {
+                    cells.push(zone.type);
+                }
+            });
+
+            // Fill remaining grid if any (whitespace)
+            const totalCells = data.gridSize * data.gridSize;
+            while(cells.length < totalCells) {
+                cells.push('empty');
+            }
+
+            // Shuffle slightly for organic look? No, keep ordered for "Zoning" clarity.
+            // Actually, let's group them to look like zones.
+            
+            cells.forEach((type, index) => {
+                const cell = document.createElement('div');
+                cell.className = 'w-full h-full rounded-sm zone-block animate-fade';
+                
+                if(type === 'zone1') cell.style.backgroundColor = '#f6ee52'; // Yellow (Exp)
+                else if(type === 'zone2') cell.style.backgroundColor = '#999887'; // Mid Grey (Display)
+                else if(type === 'zone3') cell.style.backgroundColor = '#16160b'; // Black (Service)
+                else cell.style.backgroundColor = 'transparent'; // Empty
+                
+                // Add subtle animation delay
+                cell.style.animationDelay = `${index * 0.01}s`;
+                
+                container.appendChild(cell);
+            });
+        }
+
+        function renderBOM(bom) {
+            const tbody = document.getElementById('bom-body');
+            tbody.innerHTML = bom.map(item => `
+                <tr>
+                    <td class="px-3 py-2 font-medium">${item.name}</td>
+                    <td class="px-3 py-2 text-gray-500 text-xs">${item.type}</td>
+                    <td class="px-3 py-2 text-right font-bold">${item.qty}</td>
+                </tr>
+            `).join('');
+        }
+
+        function renderStoreChart(data) {
+            const ctx = document.getElementById('storeMixChart').getContext('2d');
+            
+            if (storeMixChart) storeMixChart.destroy();
+
+            storeMixChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Experience', 'Display', 'Service', 'Leisure'],
+                    datasets: [{
+                        label: 'Area Allocation %',
+                        data: data,
+                        backgroundColor: ['#f6ee52', '#999887', '#16160b', '#dbd9c6'],
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, max: 100 }
+                    }
+                }
+            });
+        }
+
+        // --- MATERIAL CHART ---
+        function initMaterialChart() {
+            const ctx = document.getElementById('materialChart').getContext('2d');
+            
+            if (materialChart) materialChart.destroy();
+
+            materialChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Base (Light Grey Paint)', 'Texture (Metal/Glass)', 'Accent (Yellow)'],
+                    datasets: [{
+                        data: [65, 25, 10], // Approx 60-70, 20-30, 5-10
+                        backgroundColor: ['#dbd9c6', '#999887', '#f6ee52'],
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+
+        // --- UTILS ---
+        // Simple CSS fade animation
+        document.head.insertAdjacentHTML('beforeend', `
+            <style>
+                @keyframes fade {
+                    from { opacity: 0; transform: translateY(10px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                .animate-fade {
+                    animation: fade 0.5s ease-out forwards;
+                }
+            </style>
+        `);
+
+    </script>
+</body>
+</html>
